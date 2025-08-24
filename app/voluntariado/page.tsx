@@ -58,7 +58,7 @@ export default function VoluntariadoPage() {
 
     const interval = setInterval(() => {
       nextVideo()
-    }, 6000) // Cambia video cada 6 segundos
+    }, 5000) // Cambia video cada 6 segundos
 
     return () => clearInterval(interval)
   }, [videos.length, isPaused])

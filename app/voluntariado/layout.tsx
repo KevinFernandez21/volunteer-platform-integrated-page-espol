@@ -17,10 +17,10 @@ export default function VoluntariadoLayout({
             <Link href="/" className="text-blue-200 hover:text-white transition-colors flex items-center">
               ← Volver a ESPOL
             </Link>
-            <div className="text-right">
+            <Link href="/voluntariado" className="text-right hover:text-blue-200 transition-colors">
               <h2 className="text-xl font-bold">Voluntariado ESPOL</h2>
               <p className="text-sm text-blue-200">Plataforma de Voluntariado Colaborativo</p>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
