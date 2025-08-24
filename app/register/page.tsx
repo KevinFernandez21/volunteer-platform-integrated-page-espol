@@ -108,8 +108,18 @@ export default function RegisterPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-[#154d8c] py-12 px-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen relative py-12 px-4 flex items-center justify-center overflow-hidden">
+        {/* Background Image - Bottom Half */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-1/2 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('/ubicacion-eoc.jpg')`,
+            filter: 'blur(3px)',
+          }}
+        />
+        <div className="absolute inset-0 bg-[#154d8c]/80" />
+        
+        <Card className="max-w-md w-full relative z-10">
           <CardHeader className="text-center">
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
             <CardTitle className="text-2xl text-green-600">¡Registro Exitoso!</CardTitle>
@@ -154,8 +164,18 @@ export default function RegisterPage() {
 
   if (!userType) {
     return (
-      <div className="min-h-screen bg-[#154d8c] py-12 px-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen relative py-12 px-4 overflow-hidden">
+        {/* Background Image - Bottom Half */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-1/2 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('/ubicacion-eoc.jpg')`,
+            filter: 'blur(3px)',
+          }}
+        />
+        <div className="absolute inset-0 bg-[#154d8c]/80" />
+        
+        <div className="max-w-4xl mx-auto relative z-10">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center text-white hover:text-gray-200 mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -235,8 +255,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#154d8c] py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen relative py-12 px-4 overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/ubicacion-eoc.jpg')`,
+          filter: 'blur(3px)',
+        }}
+      />
+      <div className="absolute inset-0 bg-[#154d8c]/80" />
+      
+      <div className="max-w-2xl mx-auto relative z-10">
         <div className="text-center mb-8">
           <Button variant="ghost" onClick={handleBackToSelection} className="mb-4 text-white">
             <ArrowLeft className="w-4 h-4 mr-2" />
