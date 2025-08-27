@@ -258,7 +258,7 @@ export default function VoluntariadoPage() {
       <section className="py-16 px-4 bg-[#2B4C8C] text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-3xl font-bold mb-6">¿Listo para generar impacto social?</h3>
-          <p className="text-xl text-white/80 mb-8">Únete a nuestra plataforma y forma parte del cambio sostenible</p>
+          <p className="text-xl text-white/80 mb-8">Conecta, colabora y transforma vidas a través del voluntariado</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
               <Button size="lg" className="bg-[#FF6B35] hover:bg-[#e55a2b] text-white">

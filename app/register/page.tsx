@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Building2, GraduationCap, Users, ArrowLeft, CheckCircle } from "lucide-react"
+import { Building2, Heart, Users, ArrowLeft, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
@@ -31,13 +31,23 @@ export default function RegisterPage() {
     career: "",
     semester: "",
     skills: [] as string[],
+    volunteerType: "", // "student", "administrative", "external"
+    faculty: "", // for administrative users
+    company: "", // for external users (optional)
+    employeeId: "", // for administrative users
   })
 
   const validateForm = () => {
     const requiredFields = ["name", "email", "phone", "location"]
 
     if (userType === "estudiante") {
-      requiredFields.push("studentId", "career", "semester")
+      requiredFields.push("volunteerType")
+      if (formData.volunteerType === "student") {
+        requiredFields.push("studentId", "career", "semester")
+      } else if (formData.volunteerType === "administrative") {
+        requiredFields.push("employeeId", "faculty")
+      }
+      // external type has no additional required fields beyond name, email, phone, location
     } else if (userType === "empresa") {
       requiredFields.push("position")
     } else if (userType === "comunidad") {
@@ -131,7 +141,7 @@ export default function RegisterPage() {
             <Link href="/dashboard">
               <Button className="w-full">Ir al Dashboard</Button>
             </Link>
-            <Link href="/">
+            <Link href="/voluntariado">
               <Button variant="outline" className="w-full bg-transparent">
                 Volver al Inicio
               </Button>
@@ -177,9 +187,9 @@ export default function RegisterPage() {
         
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center text-white hover:text-gray-200 mb-4">
+            <Link href="/voluntariado" className="inline-flex items-center text-white hover:text-gray-200 mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al inicio
+              Volver a Voluntariado
             </Link>
             <h1 className="text-5xl font-black text-white mb-4">Únete a VolunteerConnect</h1>
             <p className="text-gray-200">Selecciona tu tipo de perfil para comenzar</p>
@@ -212,8 +222,8 @@ export default function RegisterPage() {
               onClick={() => handleUserTypeSelect("estudiante")}
             >
               <CardHeader className="text-center">
-                <GraduationCap className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                <CardTitle>Estudiante ESPOL</CardTitle>
+                <Heart className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <CardTitle>Voluntario</CardTitle>
                 <CardDescription className="text-gray-700">
                   Participa en actividades de voluntariado y desarrollo social
                 </CardDescription>
@@ -272,7 +282,11 @@ export default function RegisterPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Cambiar tipo de usuario
           </Button>
-          <h1 className="text-5xl font-black text-white mb-4">Registro</h1>
+          <h1 className="text-5xl font-black text-white mb-4">
+            {userType === "empresa" ? "Registro - Empresa" : 
+             userType === "estudiante" ? "Registro - Voluntario" : 
+             "Registro - Comunidad"}
+          </h1>
         </div>
 
         <Card className="bg-white">
@@ -373,56 +387,168 @@ export default function RegisterPage() {
 
               {userType === "estudiante" && (
                 <>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  {/* Volunteer Type Selection */}
+                  <div>
+                    <Label className="text-gray-700 text-base font-medium">
+                      Tipo de Voluntario
+                    </Label>
+                    <div className="grid md:grid-cols-3 gap-4 mt-2">
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          formData.volunteerType === "student"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => setFormData((prev) => ({ ...prev, volunteerType: "student" }))}
+                      >
+                        <div className="text-center">
+                          <Heart className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                          <h4 className="font-medium text-gray-900">Estudiante ESPOL</h4>
+                          <p className="text-sm text-gray-600">Estudiante regular de ESPOL</p>
+                        </div>
+                      </div>
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          formData.volunteerType === "administrative"
+                            ? "border-purple-500 bg-purple-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => setFormData((prev) => ({ ...prev, volunteerType: "administrative" }))}
+                      >
+                        <div className="text-center">
+                          <Building2 className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                          <h4 className="font-medium text-gray-900">Administrativo ESPOL</h4>
+                          <p className="text-sm text-gray-600">Empleado administrativo de ESPOL</p>
+                        </div>
+                      </div>
+                      <div
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          formData.volunteerType === "external"
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => setFormData((prev) => ({ ...prev, volunteerType: "external" }))}
+                      >
+                        <div className="text-center">
+                          <Users className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                          <h4 className="font-medium text-gray-900">Externo a ESPOL</h4>
+                          <p className="text-sm text-gray-600">Persona externa a ESPOL</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Student-specific fields */}
+                  {formData.volunteerType === "student" && (
+                    <>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="studentId" className="text-gray-700">
+                            Matrícula ESPOL
+                          </Label>
+                          <Input
+                            id="studentId"
+                            value={formData.studentId}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
+                            placeholder="Ej: 202012345"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="semester" className="text-gray-700">
+                            Semestre
+                          </Label>
+                          <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, semester: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona tu semestre" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+                                <SelectItem key={sem} value={sem.toString()}>
+                                  {sem}° Semestre
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="career" className="text-gray-700">
+                          Carrera
+                        </Label>
+                        <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, career: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona tu carrera" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ingenieria-sistemas">Ingeniería en Sistemas</SelectItem>
+                            <SelectItem value="ingenieria-industrial">Ingeniería Industrial</SelectItem>
+                            <SelectItem value="ingenieria-civil">Ingeniería Civil</SelectItem>
+                            <SelectItem value="ingenieria-electronica">Ingeniería Electrónica</SelectItem>
+                            <SelectItem value="economia">Economía</SelectItem>
+                            <SelectItem value="administracion">Administración de Empresas</SelectItem>
+                            <SelectItem value="otras">Otras</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Administrative-specific fields */}
+                  {formData.volunteerType === "administrative" && (
+                    <>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="employeeId" className="text-gray-700">
+                            Código de Empleado
+                          </Label>
+                          <Input
+                            id="employeeId"
+                            value={formData.employeeId}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, employeeId: e.target.value }))}
+                            placeholder="Ej: EMP001"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="faculty" className="text-gray-700">
+                            Facultad/Área
+                          </Label>
+                          <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, faculty: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona tu facultad/área" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fiec">FIEC - Facultad de Ingeniería Eléctrica y Computación</SelectItem>
+                              <SelectItem value="fimcbor">FIMCBOR - Facultad de Ingeniería Mecánica y Ciencias de la Producción</SelectItem>
+                              <SelectItem value="fcnm">FCNM - Facultad de Ciencias Naturales y Matemáticas</SelectItem>
+                              <SelectItem value="fimcp">FIMCP - Facultad de Ingeniería Marítima y Ciencias del Mar</SelectItem>
+                              <SelectItem value="fcsh">FCSH - Facultad de Ciencias Sociales y Humanísticas</SelectItem>
+                              <SelectItem value="edcom">EDCOM - Escuela de Diseño y Comunicación Visual</SelectItem>
+                              <SelectItem value="administracion">Administración</SelectItem>
+                              <SelectItem value="rectorado">Rectorado</SelectItem>
+                              <SelectItem value="otros">Otros</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* External user fields */}
+                  {formData.volunteerType === "external" && (
                     <div>
-                      <Label htmlFor="studentId" className="text-gray-700">
-                        Matrícula ESPOL
+                      <Label htmlFor="company" className="text-gray-700">
+                        Empresa/Organización (Opcional)
                       </Label>
                       <Input
-                        id="studentId"
-                        value={formData.studentId}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
-                        placeholder="Ej: 202012345"
-                        required
+                        id="company"
+                        value={formData.company}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, company: e.target.value }))}
+                        placeholder="Nombre de tu empresa u organización (opcional)"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="semester" className="text-gray-700">
-                        Semestre
-                      </Label>
-                      <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, semester: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona tu semestre" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
-                            <SelectItem key={sem} value={sem.toString()}>
-                              {sem}° Semestre
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="career" className="text-gray-700">
-                      Carrera
-                    </Label>
-                    <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, career: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona tu carrera" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ingenieria-sistemas">Ingeniería en Sistemas</SelectItem>
-                        <SelectItem value="ingenieria-industrial">Ingeniería Industrial</SelectItem>
-                        <SelectItem value="ingenieria-civil">Ingeniería Civil</SelectItem>
-                        <SelectItem value="ingenieria-electronica">Ingeniería Electrónica</SelectItem>
-                        <SelectItem value="economia">Economía</SelectItem>
-                        <SelectItem value="administracion">Administración de Empresas</SelectItem>
-                        <SelectItem value="otras">Otras</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  )}
                 </>
               )}
 

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
-import { User, MapPin, Calendar, Settings, Shield, Camera, Save, Edit } from "lucide-react"
+import { User, MapPin, Calendar, Settings, Shield, Camera, Save, Edit, Award, Upload, Download, Eye } from "lucide-react"
 import { useState } from "react"
 
 export default function PerfilPage() {
@@ -41,6 +41,31 @@ export default function PerfilPage() {
     eventReminders: true,
   })
 
+  const [certificates, setCertificates] = useState([
+    {
+      id: "1",
+      name: "Certificado de Prompt Engineering",
+      issuer: "ESPOL - Centro de Innovación",
+      dateIssued: "2024-01-15",
+      type: "Digital",
+      description: "Certificado en técnicas avanzadas de Prompt Engineering para IA generativa",
+      fileUrl: "/certificates/prompt-engineering-cert.pdf",
+      verified: true,
+    },
+    {
+      id: "2", 
+      name: "Voluntariado Comunitario - 50 Horas",
+      issuer: "VolunteerConnect ESPOL",
+      dateIssued: "2023-12-10",
+      type: "Digital",
+      description: "Certificado por completar 50 horas de servicio comunitario",
+      fileUrl: "/certificates/volunteer-50h.pdf",
+      verified: true,
+    },
+  ])
+
+  const [uploadingCertificate, setUploadingCertificate] = useState(false)
+
   const handleSave = () => {
     console.log("[v0] Saving profile data:", profileData)
     setIsEditing(false)
@@ -67,6 +92,48 @@ export default function PerfilPage() {
     }))
   }
 
+  const handleCertificateUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingCertificate(true)
+    
+    // Simulate upload process
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const newCertificate = {
+        id: Date.now().toString(),
+        name: file.name.replace(/\.[^/.]+$/, ""),
+        issuer: "Pendiente de verificación",
+        dateIssued: new Date().toISOString().split('T')[0],
+        type: "Digital",
+        description: "Certificado cargado por el usuario",
+        fileUrl: URL.createObjectURL(file),
+        verified: false,
+      }
+      
+      setCertificates(prev => [newCertificate, ...prev])
+      alert("Certificado cargado exitosamente. Pendiente de verificación.")
+    } catch (error) {
+      alert("Error al cargar el certificado")
+    } finally {
+      setUploadingCertificate(false)
+    }
+  }
+
+  const downloadCertificate = (certificate: any) => {
+    // Simulate download
+    const link = document.createElement('a')
+    link.href = certificate.fileUrl
+    link.download = `${certificate.name}.pdf`
+    link.click()
+  }
+
+  const viewCertificate = (certificate: any) => {
+    window.open(certificate.fileUrl, '_blank')
+  }
+
   return (
     <div>
       <PageHeader
@@ -90,9 +157,10 @@ export default function PerfilPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="skills">Habilidades</TabsTrigger>
+            <TabsTrigger value="certificates">Certificados</TabsTrigger>
             <TabsTrigger value="preferences">Preferencias</TabsTrigger>
             <TabsTrigger value="privacy">Privacidad</TabsTrigger>
           </TabsList>
@@ -308,6 +376,137 @@ export default function PerfilPage() {
                   <div className="text-center">
                     <div className="text-3xl font-bold text-orange-600">92</div>
                     <p className="text-sm text-gray-600">Puntuación de Impacto</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="certificates" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Mis Certificados</CardTitle>
+                    <CardDescription>Gestiona y visualiza tus certificaciones digitales</CardDescription>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleCertificateUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploadingCertificate}
+                    />
+                    <Button disabled={uploadingCertificate}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingCertificate ? "Subiendo..." : "Subir Certificado"}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {certificates.map((certificate) => (
+                    <div
+                      key={certificate.id}
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1">
+                            <Award className={`w-8 h-8 ${certificate.verified ? 'text-blue-600' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-gray-900">{certificate.name}</h4>
+                              {certificate.verified && (
+                                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                  Verificado
+                                </Badge>
+                              )}
+                              {!certificate.verified && (
+                                <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                  Pendiente
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{certificate.issuer}</p>
+                            <p className="text-sm text-gray-500">
+                              Emitido: {new Date(certificate.dateIssued).toLocaleDateString('es-ES')}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-2">{certificate.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => viewCertificate(certificate)}
+                            className="p-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => downloadCertificate(certificate)}
+                            className="p-2"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {certificates.length === 0 && (
+                    <div className="text-center py-12">
+                      <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes certificados aún</h3>
+                      <p className="text-gray-600 mb-4">
+                        Sube tus certificaciones para mostrar tus logros y competencias
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Certificados Destacados</CardTitle>
+                <CardDescription>Ejemplos de certificaciones digitales populares</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Award className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900">Prompt Engineering</h4>
+                    <p className="text-sm text-gray-600">
+                      Certificación en técnicas avanzadas de IA generativa
+                    </p>
+                  </div>
+                  <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Award className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900">Voluntariado Social</h4>
+                    <p className="text-sm text-gray-600">
+                      Certificados por horas de servicio comunitario
+                    </p>
+                  </div>
+                  <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Award className="w-12 h-12 text-purple-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900">Liderazgo</h4>
+                    <p className="text-sm text-gray-600">
+                      Certificaciones en habilidades de liderazgo
+                    </p>
+                  </div>
+                  <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <Award className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900">Competencias Técnicas</h4>
+                    <p className="text-sm text-gray-600">
+                      Certificados en programación y tecnología
+                    </p>
                   </div>
                 </div>
               </CardContent>
