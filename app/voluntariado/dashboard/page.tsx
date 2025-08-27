@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AnimatedNumber } from "@/components/ui/animated-number"
 import {
   TrendingUp,
   Target,
@@ -358,7 +359,9 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{userStats.totalHours}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                <AnimatedNumber value={userStats.totalHours} />
+              </div>
               <p className="text-xs text-muted-foreground">+12 horas este mes</p>
             </CardContent>
           </Card>
@@ -369,7 +372,9 @@ export default function DashboardPage() {
               <Target className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{userStats.projectsCompleted}</div>
+              <div className="text-2xl font-bold text-green-600">
+                <AnimatedNumber value={userStats.projectsCompleted} />
+              </div>
               <p className="text-xs text-muted-foreground">+2 este mes</p>
             </CardContent>
           </Card>
@@ -380,7 +385,9 @@ export default function DashboardPage() {
               <TrendingUp className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{userStats.impactScore}/100</div>
+              <div className="text-2xl font-bold text-orange-600">
+                <AnimatedNumber value={userStats.impactScore} />/100
+              </div>
               <p className="text-xs text-muted-foreground">+8 puntos este mes</p>
             </CardContent>
           </Card>
@@ -391,8 +398,10 @@ export default function DashboardPage() {
               <Award className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">#{userStats.ranking}</div>
-              <p className="text-xs text-muted-foreground">de {userStats.totalVolunteers} voluntarios</p>
+              <div className="text-2xl font-bold text-purple-600">
+                #<AnimatedNumber value={userStats.ranking} />
+              </div>
+              <p className="text-xs text-muted-foreground">de <AnimatedNumber value={userStats.totalVolunteers} /> voluntarios</p>
             </CardContent>
           </Card>
         </div>
@@ -652,22 +661,30 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                     <Target className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-blue-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-blue-600">11</div>
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                      <AnimatedNumber value={11} />
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Total Proyectos</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
                     <Award className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-green-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-green-600">8</div>
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
+                      <AnimatedNumber value={8} />
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Completados</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
                     <Clock className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-orange-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-orange-600">3</div>
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">
+                      <AnimatedNumber value={3} />
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">En Progreso</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
                     <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-purple-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-purple-600">73%</div>
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600">
+                      <AnimatedNumber value={73} />%
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Tasa de Éxito</p>
                   </div>
                 </div>
@@ -683,7 +700,7 @@ export default function DashboardPage() {
                 <Card style={{ backgroundColor: "#FFF1F2", borderColor: "#C5192D" }} className="border-2">
                   <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                     <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#C5192D" }}>
-                      17
+                      <AnimatedNumber value={17} />
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600">ODS Impactados</p>
                   </CardContent>
@@ -691,7 +708,7 @@ export default function DashboardPage() {
                 <Card style={{ backgroundColor: "#F0FDF4", borderColor: "#4C9F38" }} className="border-2">
                   <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                     <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#4C9F38" }}>
-                      {userStats.peopleImpacted}
+                      <AnimatedNumber value={userStats.peopleImpacted} />
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600">Personas Beneficiadas</p>
                   </CardContent>
@@ -699,7 +716,7 @@ export default function DashboardPage() {
                 <Card style={{ backgroundColor: "#F0F9FF", borderColor: "#0A97D9" }} className="border-2">
                   <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                     <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#0A97D9" }}>
-                      67kg
+                      <AnimatedNumber value={67} />kg
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600">Residuos Recolectados</p>
                   </CardContent>
@@ -707,7 +724,7 @@ export default function DashboardPage() {
                 <Card style={{ backgroundColor: "#FFFBEB", borderColor: "#FD9D24" }} className="border-2">
                   <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                     <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#FD9D24" }}>
-                      {userStats.carbonFootprintReduced}t
+                      <AnimatedNumber value={userStats.carbonFootprintReduced} decimals={1} />t
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600">CO₂ Reducido</p>
                   </CardContent>
@@ -930,7 +947,9 @@ export default function DashboardPage() {
                   <Target className="h-5 w-5 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">47</div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    <AnimatedNumber value={47} />
+                  </div>
                   <p className="text-xs text-muted-foreground">+23% este mes</p>
                 </CardContent>
               </Card>
@@ -941,7 +960,9 @@ export default function DashboardPage() {
                   <Heart className="h-5 w-5 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600">9,990</div>
+                  <div className="text-3xl font-bold text-green-600">
+                    <AnimatedNumber value={9990} />
+                  </div>
                   <p className="text-xs text-muted-foreground">Personas impactadas</p>
                 </CardContent>
               </Card>
@@ -952,7 +973,9 @@ export default function DashboardPage() {
                   <Clock className="h-5 w-5 text-purple-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">1,590</div>
+                  <div className="text-3xl font-bold text-purple-600">
+                    <AnimatedNumber value={1590} />
+                  </div>
                   <p className="text-xs text-muted-foreground">Tiempo invertido</p>
                 </CardContent>
               </Card>
@@ -963,7 +986,9 @@ export default function DashboardPage() {
                   <TrendingUp className="h-5 w-5 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-orange-600">75%</div>
+                  <div className="text-3xl font-bold text-orange-600">
+                    <AnimatedNumber value={75} />%
+                  </div>
                   <p className="text-xs text-muted-foreground">9 objetivos</p>
                 </CardContent>
               </Card>
@@ -1125,22 +1150,30 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                     <Droplets className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-blue-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-blue-600">2,500L</div>
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                      <AnimatedNumber value={2500} />L
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Agua limpia distribuida</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
                     <Leaf className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-green-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-green-600">450</div>
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
+                      <AnimatedNumber value={450} />
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Árboles plantados</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg">
                     <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-red-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-red-600">1,200</div>
+                    <div className="text-xl sm:text-2xl font-bold text-red-600">
+                      <AnimatedNumber value={1200} />
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Estudiantes beneficiados</p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
                     <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-orange-600" />
-                    <div className="text-xl sm:text-2xl font-bold text-orange-600">85kg</div>
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">
+                      <AnimatedNumber value={85} />kg
+                    </div>
                     <p className="text-xs sm:text-sm text-gray-600">Alimentos distribuidos</p>
                   </div>
                 </div>

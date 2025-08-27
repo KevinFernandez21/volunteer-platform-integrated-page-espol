@@ -84,7 +84,7 @@ export default function MatchingPage() {
       id: "1",
       name: "Carlos Mendoza",
       type: "volunteer",
-      avatar: "/placeholder.svg?height=40&width=40",
+      avatar: "/espol-volunteering-teamwork.png",
       location: "Guayaquil, Guayas",
       skills: ["Programación", "Diseño Web", "Educación"],
       interests: ["Tecnología", "Educación", "Juventud"],
@@ -101,7 +101,7 @@ export default function MatchingPage() {
       id: "2",
       name: "Ana Rodríguez",
       type: "volunteer",
-      avatar: "/placeholder.svg?height=40&width=40",
+      avatar: "/beach-cleanup-volunteers.png",
       location: "Samborondón, Guayas",
       skills: ["Marketing", "Comunicación", "Gestión de Proyectos"],
       interests: ["Medio Ambiente", "Sostenibilidad", "Comunidad"],
@@ -118,6 +118,7 @@ export default function MatchingPage() {
       id: "3",
       name: "Proyecto Alfabetización Digital",
       type: "project",
+      avatar: "/elderly-digital-education-guayaquil.png",
       location: "Durán, Guayas",
       skills: ["Informática", "Paciencia", "Comunicación"],
       interests: ["Educación", "Tecnología", "Adultos Mayores"],
@@ -128,6 +129,56 @@ export default function MatchingPage() {
       description: "Enseñanza de herramientas digitales básicas a adultos mayores de la comunidad",
       matchScore: 92,
       organization: "Centro Comunitario Durán",
+    },
+    {
+      id: "4",
+      name: "María González",
+      type: "volunteer",
+      avatar: "/collaborative-volunteer-hands.png",
+      location: "Guayaquil, Guayas",
+      skills: ["Trabajo Social", "Psicología", "Organización"],
+      interests: ["Bienestar Social", "Comunidad", "Salud Mental"],
+      availability: "Mañanas",
+      experience: "3 años",
+      rating: 4.9,
+      completedProjects: 18,
+      description: "Trabajadora social especializada en programas comunitarios y bienestar",
+      matchScore: 91,
+      organization: "Centro de Salud Comunitaria",
+      role: "Trabajadora Social",
+    },
+    {
+      id: "5",
+      name: "Proyecto Huerto Urbano",
+      type: "project",
+      avatar: "/urban-garden-volunteers.png",
+      location: "Durán, Guayas",
+      skills: ["Jardinería", "Sostenibilidad", "Educación Ambiental"],
+      interests: ["Medio Ambiente", "Agricultura Urbana", "Comunidad"],
+      availability: "Fines de semana",
+      experience: "Intermedio",
+      rating: 4.6,
+      completedProjects: 2,
+      description: "Creación y mantenimiento de espacios verdes urbanos para la comunidad",
+      matchScore: 87,
+      organization: "Fundación Verde Durán",
+    },
+    {
+      id: "6",
+      name: "Pedro Ramírez",
+      type: "volunteer",
+      avatar: "/duran-urban-garden.png",
+      location: "Durán, Guayas",
+      skills: ["Carpintería", "Construcción", "Liderazgo"],
+      interests: ["Desarrollo Comunitario", "Infraestructura", "Educación"],
+      availability: "Tardes",
+      experience: "7 años",
+      rating: 4.8,
+      completedProjects: 35,
+      description: "Constructor con experiencia en proyectos de infraestructura comunitaria",
+      matchScore: 84,
+      organization: "Constructora Ramírez",
+      role: "Supervisor de Obras",
     },
   ]
 
@@ -408,7 +459,7 @@ export default function MatchingPage() {
                     <div className="flex flex-col sm:flex-row items-start gap-4">
                       <div className="flex items-center gap-3 flex-1">
                         <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
-                          <AvatarImage src={profile.avatar || "/placeholder.svg"} />
+                          <AvatarImage src={profile.avatar} />
                           <AvatarFallback>
                             {profile.name
                               .split(" ")
@@ -667,17 +718,17 @@ export default function MatchingPage() {
                   name: "María González",
                   role: "Coordinadora de Proyectos",
                   status: "Activa",
-                  avatar: "/placeholder.svg",
+                  avatar: "/collaborative-volunteer-hands.png",
                 },
-                { name: "Pedro Ramírez", role: "Voluntario Senior", status: "Activa", avatar: "/placeholder.svg" },
-                { name: "Fundación Verde", role: "Organización", status: "Pendiente", avatar: "/placeholder.svg" },
-                { name: "Ana Torres", role: "Estudiante ESPOL", status: "Activa", avatar: "/placeholder.svg" },
+                { name: "Pedro Ramírez", role: "Voluntario Senior", status: "Activa", avatar: "/duran-urban-garden.png" },
+                { name: "Fundación Verde", role: "Organización", status: "Pendiente", avatar: "/urban-garden-volunteers.png" },
+                { name: "Ana Torres", role: "Estudiante ESPOL", status: "Activa", avatar: "/espol-volunteering-teamwork.png" },
               ].map((connection, index) => (
                 <Card key={index} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={connection.avatar || "/placeholder.svg"} />
+                        <AvatarImage src={connection.avatar} />
                         <AvatarFallback>
                           {connection.name
                             .split(" ")
