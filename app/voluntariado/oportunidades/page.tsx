@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Building2, Search, Filter, Heart, CheckCircle } from "lucide-react"
-import { useState } from "react"
+import { useState, useCallback, useMemo, memo } from "react"
 
 const mockOpportunities = [
   {
@@ -71,20 +71,22 @@ export default function OportunidadesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [applicationSuccess, setApplicationSuccess] = useState(false)
 
-  const filteredOpportunities = mockOpportunities.filter((opportunity) => {
-    const matchesSearch =
-      opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      opportunity.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === "all" || opportunity.type === filterType
-    const matchesRemote =
-      filterRemote === "all" ||
-      (filterRemote === "remote" && opportunity.remote) ||
-      (filterRemote === "presencial" && !opportunity.remote)
+  const filteredOpportunities = useMemo(() => {
+    return mockOpportunities.filter((opportunity) => {
+      const matchesSearch =
+        opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        opportunity.description.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesType = filterType === "all" || opportunity.type === filterType
+      const matchesRemote =
+        filterRemote === "all" ||
+        (filterRemote === "remote" && opportunity.remote) ||
+        (filterRemote === "presencial" && !opportunity.remote)
 
-    return matchesSearch && matchesType && matchesRemote
-  })
+      return matchesSearch && matchesType && matchesRemote
+    })
+  }, [searchTerm, filterType, filterRemote])
 
-  const handleApply = (opportunity: typeof mockOpportunities[0]) => {
+  const handleApply = useCallback((opportunity: typeof mockOpportunities[0]) => {
     setSelectedOpportunity(opportunity)
     setApplicationData({
       motivation: "",
@@ -95,9 +97,9 @@ export default function OportunidadesPage() {
       commitment: false,
     })
     setApplicationSuccess(false)
-  }
+  }, [])
 
-  const handleSkillChange = (skill: string, checked: boolean) => {
+  const handleSkillChange = useCallback((skill: string, checked: boolean) => {
     if (checked) {
       setApplicationData(prev => ({
         ...prev,
@@ -109,9 +111,9 @@ export default function OportunidadesPage() {
         skills: prev.skills.filter(s => s !== skill)
       }))
     }
-  }
+  }, [])
 
-  const validateApplication = () => {
+  const validateApplication = useCallback(() => {
     if (!applicationData.motivation.trim()) {
       alert("Por favor, describe tu motivación para participar")
       return false
@@ -125,9 +127,9 @@ export default function OportunidadesPage() {
       return false
     }
     return true
-  }
+  }, [applicationData])
 
-  const handleSubmitApplication = async () => {
+  const handleSubmitApplication = useCallback(async () => {
     if (!validateApplication()) return
 
     setIsSubmitting(true)
@@ -142,12 +144,12 @@ export default function OportunidadesPage() {
     } finally {
       setIsSubmitting(false)
     }
-  }
+  }, [validateApplication, selectedOpportunity?.id, applicationData])
 
-  const closeApplicationDialog = () => {
+  const closeApplicationDialog = useCallback(() => {
     setSelectedOpportunity(null)
     setApplicationSuccess(false)
-  }
+  }, [])
 
   return (
     <div>
@@ -158,9 +160,9 @@ export default function OportunidadesPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-8">
+          <div className="flex flex-col gap-4">
+            <div className="w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
@@ -171,9 +173,9 @@ export default function OportunidadesPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
@@ -187,7 +189,7 @@ export default function OportunidadesPage() {
               </Select>
 
               <Select value={filterRemote} onValueChange={setFilterRemote}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Modalidad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,25 +207,30 @@ export default function OportunidadesPage() {
           {filteredOpportunities.map((opportunity) => (
             <Card key={opportunity.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-xl">{opportunity.title}</CardTitle>
-                      <Badge variant={opportunity.remote ? "secondary" : "default"}>
-                        {opportunity.remote ? "Remoto" : "Presencial"}
-                      </Badge>
-                      <Badge variant="outline">{opportunity.type}</Badge>
-                    </div>
-                    <CardDescription className="text-base">{opportunity.description}</CardDescription>
-                  </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => handleApply(opportunity)} className="ml-4">
-                        <Heart className="w-4 h-4 mr-2" />
-                        Postularme
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg sm:text-xl mb-2">{opportunity.title}</CardTitle>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant={opportunity.remote ? "secondary" : "default"}>
+                            {opportunity.remote ? "Remoto" : "Presencial"}
+                          </Badge>
+                          <Badge variant="outline">{opportunity.type}</Badge>
+                        </div>
+                      </div>
+                      <div className="sm:flex-shrink-0">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              onClick={() => handleApply(opportunity)} 
+                              className="w-full sm:w-auto min-w-[140px] bg-[#2B4C8C] hover:bg-[#1e3a6f] text-white font-medium"
+                            >
+                              <Heart className="w-4 h-4 mr-2" />
+                              Postularme
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                       {applicationSuccess ? (
                         <div className="text-center py-6">
                           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
@@ -357,27 +364,31 @@ export default function OportunidadesPage() {
                           </DialogFooter>
                         </>
                       )}
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                    <CardDescription className="text-sm sm:text-base mt-3">{opportunity.description}</CardDescription>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    {opportunity.organization}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{opportunity.organization}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {opportunity.location}
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{opportunity.location}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="w-4 h-4 mr-2" />
-                    {opportunity.duration}
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{opportunity.duration}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Users className="w-4 h-4 mr-2" />
-                    {opportunity.commitment}
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{opportunity.commitment}</span>
                   </div>
                 </div>
 

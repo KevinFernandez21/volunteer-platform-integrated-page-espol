@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { User, MapPin, Calendar, Settings, Shield, Camera, Save, Edit, Award, Upload, Download, Eye } from "lucide-react"
-import { useState } from "react"
+import { useState, useCallback, useMemo, memo } from "react"
 
 export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState("profile")
@@ -66,39 +66,38 @@ export default function PerfilPage() {
 
   const [uploadingCertificate, setUploadingCertificate] = useState(false)
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     console.log("[v0] Saving profile data:", profileData)
     setIsEditing(false)
     alert("Perfil actualizado exitosamente")
-  }
+  }, [profileData])
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
-  }
+  }, [])
 
-  const addSkill = (skill: string) => {
+  const addSkill = useCallback((skill: string) => {
     if (skill && !profileData.skills.includes(skill)) {
       setProfileData((prev) => ({
         ...prev,
         skills: [...prev.skills, skill],
       }))
     }
-  }
+  }, [profileData.skills])
 
-  const removeSkill = (skillToRemove: string) => {
+  const removeSkill = useCallback((skillToRemove: string) => {
     setProfileData((prev) => ({
       ...prev,
       skills: prev.skills.filter((skill) => skill !== skillToRemove),
     }))
-  }
+  }, [])
 
-  const handleCertificateUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCertificateUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     setUploadingCertificate(true)
     
-    // Simulate upload process
     try {
       await new Promise(resolve => setTimeout(resolve, 2000))
       
@@ -120,19 +119,100 @@ export default function PerfilPage() {
     } finally {
       setUploadingCertificate(false)
     }
-  }
+  }, [])
 
-  const downloadCertificate = (certificate: any) => {
-    // Simulate download
+  const downloadCertificate = useCallback((certificate: any) => {
     const link = document.createElement('a')
     link.href = certificate.fileUrl
     link.download = `${certificate.name}.pdf`
     link.click()
-  }
+  }, [])
 
-  const viewCertificate = (certificate: any) => {
+  const viewCertificate = useCallback((certificate: any) => {
     window.open(certificate.fileUrl, '_blank')
-  }
+  }, [])
+
+  // Memoized components for better performance
+  const SkillBadges = memo(({ skills, isEditing, onRemove }: { skills: string[], isEditing: boolean, onRemove: (skill: string) => void }) => (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {skills.map((skill) => (
+        <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+          {skill}
+          {isEditing && (
+            <button onClick={() => onRemove(skill)} className="ml-1 text-gray-500 hover:text-red-500">
+              ×
+            </button>
+          )}
+        </Badge>
+      ))}
+    </div>
+  ))
+
+  const CertificateCard = memo(({ certificate, onView, onDownload }: { certificate: any, onView: (cert: any) => void, onDownload: (cert: any) => void }) => (
+    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+      <div className="space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-1 flex-shrink-0">
+            <Award className={`w-6 h-6 sm:w-8 sm:h-8 ${certificate.verified ? 'text-blue-600' : 'text-gray-400'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+              <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                {certificate.name}
+              </h4>
+              <div className="flex gap-2">
+                {certificate.verified && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                    Verificado
+                  </Badge>
+                )}
+                {!certificate.verified && (
+                  <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
+                    Pendiente
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-600">{certificate.issuer}</p>
+            <p className="text-xs sm:text-sm text-gray-500">
+              Emitido: {new Date(certificate.dateIssued).toLocaleDateString('es-ES')}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-700 mt-2 leading-relaxed">
+              {certificate.description}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onView(certificate)}
+            className="flex-1 sm:flex-none justify-center sm:justify-start"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Ver Certificado
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onDownload(certificate)}
+            className="flex-1 sm:flex-none justify-center sm:justify-start"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Descargar
+          </Button>
+        </div>
+      </div>
+    </div>
+  ))
+
+  // Memoized statistics
+  const volunteerStats = useMemo(() => [
+    { value: "156", label: "Horas Totales", bgColor: "bg-blue-50", textColor: "text-blue-600" },
+    { value: "8", label: "Proyectos Completados", bgColor: "bg-green-50", textColor: "text-green-600" },
+    { value: "92", label: "Puntuación de Impacto", bgColor: "bg-orange-50", textColor: "text-orange-600" }
+  ], [])
 
   return (
     <div>
@@ -157,13 +237,61 @@ export default function PerfilPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          {/* Desktop Navigation */}
+          <TabsList className="hidden lg:grid w-full grid-cols-5">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="skills">Habilidades</TabsTrigger>
             <TabsTrigger value="certificates">Certificados</TabsTrigger>
             <TabsTrigger value="preferences">Preferencias</TabsTrigger>
             <TabsTrigger value="privacy">Privacidad</TabsTrigger>
           </TabsList>
+
+          {/* Mobile Navigation */}
+          <div className="lg:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeTab === "profile" && "👤 Perfil"}
+                  {activeTab === "skills" && "🎯 Habilidades"} 
+                  {activeTab === "certificates" && "🏆 Certificados"}
+                  {activeTab === "preferences" && "⚙️ Preferencias"}
+                  {activeTab === "privacy" && "🔒 Privacidad"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="profile">
+                  <div className="flex items-center gap-2">
+                    <span>👤</span>
+                    <span>Perfil</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="skills">
+                  <div className="flex items-center gap-2">
+                    <span>🎯</span>
+                    <span>Habilidades</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="certificates">
+                  <div className="flex items-center gap-2">
+                    <span>🏆</span>
+                    <span>Certificados</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="preferences">
+                  <div className="flex items-center gap-2">
+                    <span>⚙️</span>
+                    <span>Preferencias</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="privacy">
+                  <div className="flex items-center gap-2">
+                    <span>🔒</span>
+                    <span>Privacidad</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <TabsContent value="profile" className="space-y-6">
             <Card>
@@ -172,9 +300,9 @@ export default function PerfilPage() {
                 <CardDescription>Actualiza tu información básica y de contacto</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   <div className="relative">
-                    <Avatar className="w-24 h-24">
+                    <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                       <AvatarImage src="/placeholder.svg?height=96&width=96" />
                       <AvatarFallback className="text-lg">CM</AvatarFallback>
                     </Avatar>
@@ -184,12 +312,12 @@ export default function PerfilPage() {
                       </Button>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold">{profileData.name}</h3>
-                    <p className="text-gray-600">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3 className="text-lg sm:text-xl font-semibold">{profileData.name}</h3>
+                    <p className="text-gray-600 text-sm sm:text-base">
                       {profileData.career} - {profileData.university}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {profileData.location}
@@ -202,7 +330,7 @@ export default function PerfilPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre Completo</Label>
                     <Input
@@ -303,18 +431,7 @@ export default function PerfilPage() {
               <CardContent className="space-y-6">
                 <div>
                   <Label className="text-base font-medium">Habilidades Técnicas</Label>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {profileData.skills.map((skill) => (
-                      <Badge key={skill} variant="secondary" className="flex items-center gap-1">
-                        {skill}
-                        {isEditing && (
-                          <button onClick={() => removeSkill(skill)} className="ml-1 text-gray-500 hover:text-red-500">
-                            ×
-                          </button>
-                        )}
-                      </Badge>
-                    ))}
-                  </div>
+                  <SkillBadges skills={profileData.skills} isEditing={isEditing} onRemove={removeSkill} />
                   {isEditing && (
                     <div className="flex gap-2 mt-3">
                       <Input placeholder="Agregar nueva habilidad..." className="flex-1" />
@@ -364,19 +481,13 @@ export default function PerfilPage() {
                 <CardDescription>Historial de participación y logros</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">156</div>
-                    <p className="text-sm text-gray-600">Horas Totales</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600">8</div>
-                    <p className="text-sm text-gray-600">Proyectos Completados</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-orange-600">92</div>
-                    <p className="text-sm text-gray-600">Puntuación de Impacto</p>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                  {volunteerStats.map((stat, index) => (
+                    <div key={index} className={`text-center p-4 rounded-lg ${stat.bgColor}`}>
+                      <div className={`text-2xl sm:text-3xl font-bold ${stat.textColor}`}>{stat.value}</div>
+                      <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -408,56 +519,12 @@ export default function PerfilPage() {
               <CardContent>
                 <div className="space-y-4">
                   {certificates.map((certificate) => (
-                    <div
+                    <CertificateCard
                       key={certificate.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className="mt-1">
-                            <Award className={`w-8 h-8 ${certificate.verified ? 'text-blue-600' : 'text-gray-400'}`} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-gray-900">{certificate.name}</h4>
-                              {certificate.verified && (
-                                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                  Verificado
-                                </Badge>
-                              )}
-                              {!certificate.verified && (
-                                <Badge variant="outline" className="text-orange-600 border-orange-300">
-                                  Pendiente
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">{certificate.issuer}</p>
-                            <p className="text-sm text-gray-500">
-                              Emitido: {new Date(certificate.dateIssued).toLocaleDateString('es-ES')}
-                            </p>
-                            <p className="text-sm text-gray-700 mt-2">{certificate.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => viewCertificate(certificate)}
-                            className="p-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => downloadCertificate(certificate)}
-                            className="p-2"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                      certificate={certificate}
+                      onView={viewCertificate}
+                      onDownload={downloadCertificate}
+                    />
                   ))}
                   
                   {certificates.length === 0 && (
@@ -479,32 +546,32 @@ export default function PerfilPage() {
                 <CardDescription>Ejemplos de certificaciones digitales populares</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                    <Award className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                    <h4 className="font-medium text-gray-900">Prompt Engineering</h4>
-                    <p className="text-sm text-gray-600">
+                    <Award className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">Prompt Engineering</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Certificación en técnicas avanzadas de IA generativa
                     </p>
                   </div>
                   <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                    <Award className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                    <h4 className="font-medium text-gray-900">Voluntariado Social</h4>
-                    <p className="text-sm text-gray-600">
+                    <Award className="w-10 h-10 sm:w-12 sm:h-12 text-green-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">Voluntariado Social</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Certificados por horas de servicio comunitario
                     </p>
                   </div>
                   <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                    <Award className="w-12 h-12 text-purple-600 mx-auto mb-3" />
-                    <h4 className="font-medium text-gray-900">Liderazgo</h4>
-                    <p className="text-sm text-gray-600">
+                    <Award className="w-10 h-10 sm:w-12 sm:h-12 text-purple-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">Liderazgo</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Certificaciones en habilidades de liderazgo
                     </p>
                   </div>
                   <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                    <Award className="w-12 h-12 text-orange-600 mx-auto mb-3" />
-                    <h4 className="font-medium text-gray-900">Competencias Técnicas</h4>
-                    <p className="text-sm text-gray-600">
+                    <Award className="w-10 h-10 sm:w-12 sm:h-12 text-orange-600 mx-auto mb-3" />
+                    <h4 className="font-medium text-gray-900 text-sm sm:text-base">Competencias Técnicas</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Certificados en programación y tecnología
                     </p>
                   </div>
@@ -595,7 +662,7 @@ export default function PerfilPage() {
                 <CardDescription>Personaliza cómo el sistema te recomienda proyectos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Distancia Máxima</Label>
                     <Select defaultValue="25km">

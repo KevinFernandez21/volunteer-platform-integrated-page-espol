@@ -28,7 +28,7 @@ import {
   Building2,
   CheckCircle,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, memo } from "react"
 
 interface MatchingProfile {
   id: string
@@ -132,10 +132,9 @@ export default function MatchingPage() {
   ]
 
   const [recommendations, setRecommendations] = useState<MatchingProfile[]>(mockRecommendations)
-  const [filteredRecommendations, setFilteredRecommendations] = useState<MatchingProfile[]>(mockRecommendations)
 
-  useEffect(() => {
-    const filtered = recommendations.filter((item) => {
+  const filteredRecommendations = useMemo(() => {
+    return recommendations.filter((item) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,11 +146,9 @@ export default function MatchingPage() {
 
       return matchesSearch && matchesLocation && matchesType && matchesAvailability
     })
-
-    setFilteredRecommendations(filtered)
   }, [searchTerm, filters, recommendations])
 
-  const handleConnect = (profile: MatchingProfile) => {
+  const handleConnect = useCallback((profile: MatchingProfile) => {
     setSelectedProfile(profile)
     setConnectionData({
       motivation: "",
@@ -162,9 +159,9 @@ export default function MatchingPage() {
       commitment: false,
     })
     setConnectionSuccess(false)
-  }
+  }, [])
 
-  const handleSkillChange = (skill: string, checked: boolean) => {
+  const handleSkillChange = useCallback((skill: string, checked: boolean) => {
     if (checked) {
       setConnectionData(prev => ({
         ...prev,
@@ -176,9 +173,9 @@ export default function MatchingPage() {
         skills: prev.skills.filter(s => s !== skill)
       }))
     }
-  }
+  }, [])
 
-  const validateConnection = () => {
+  const validateConnection = useCallback(() => {
     if (!connectionData.motivation.trim()) {
       alert("Por favor, describe tu motivación para conectar")
       return false
@@ -192,9 +189,9 @@ export default function MatchingPage() {
       return false
     }
     return true
-  }
+  }, [connectionData])
 
-  const handleSubmitConnection = async () => {
+  const handleSubmitConnection = useCallback(async () => {
     if (!validateConnection()) return
 
     setIsSubmitting(true)
@@ -209,23 +206,23 @@ export default function MatchingPage() {
     } finally {
       setIsSubmitting(false)
     }
-  }
+  }, [validateConnection, selectedProfile?.id, connectionData])
 
-  const closeConnectionDialog = () => {
+  const closeConnectionDialog = useCallback(() => {
     setSelectedProfile(null)
     setConnectionSuccess(false)
-  }
+  }, [])
 
-  const handleMessage = (profileId: string) => {
+  const handleMessage = useCallback((profileId: string) => {
     console.log(`[v0] Opening message with: ${profileId}`)
     alert("Función de mensajería próximamente disponible")
-  }
+  }, [])
 
-  const handleFilterChange = (key: keyof MatchingFilters, value: any) => {
+  const handleFilterChange = useCallback((key: keyof MatchingFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
-  }
+  }, [])
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = useCallback((type: string) => {
     switch (type) {
       case "volunteer":
         return <Users className="w-4 h-4" />
@@ -236,14 +233,14 @@ export default function MatchingPage() {
       default:
         return <Users className="w-4 h-4" />
     }
-  }
+  }, [])
 
-  const getMatchScoreColor = (score: number) => {
+  const getMatchScoreColor = useCallback((score: number) => {
     if (score >= 90) return "text-green-600 bg-green-100"
     if (score >= 80) return "text-blue-600 bg-blue-100"
     if (score >= 70) return "text-yellow-600 bg-yellow-100"
     return "text-gray-600 bg-gray-100"
-  }
+  }, [])
 
   return (
     <div>
@@ -280,7 +277,7 @@ export default function MatchingPage() {
                 />
               </div>
 
-              <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label>Ubicación</Label>
                   <Select value={filters.location} onValueChange={(value) => handleFilterChange("location", value)}>
@@ -352,31 +349,65 @@ export default function MatchingPage() {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          {/* Desktop Navigation */}
+          <TabsList className="hidden sm:grid w-full grid-cols-3">
             <TabsTrigger value="recommendations">Recomendaciones IA</TabsTrigger>
             <TabsTrigger value="connections">Mis Conexiones</TabsTrigger>
             <TabsTrigger value="messages">Mensajes</TabsTrigger>
           </TabsList>
 
+          {/* Mobile Navigation */}
+          <div className="sm:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeTab === "recommendations" && "🤖 Recomendaciones IA"}
+                  {activeTab === "connections" && "👥 Mis Conexiones"} 
+                  {activeTab === "messages" && "💬 Mensajes"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recommendations">
+                  <div className="flex items-center gap-2">
+                    <span>🤖</span>
+                    <span>Recomendaciones IA</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="connections">
+                  <div className="flex items-center gap-2">
+                    <span>👥</span>
+                    <span>Mis Conexiones</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="messages">
+                  <div className="flex items-center gap-2">
+                    <span>💬</span>
+                    <span>Mensajes</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <TabsContent value="recommendations" className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Recomendaciones Personalizadas</h2>
-                <p className="text-gray-600">Basadas en tu perfil, habilidades e intereses</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Recomendaciones Personalizadas</h2>
+                <p className="text-sm sm:text-base text-gray-600">Basadas en tu perfil, habilidades e intereses</p>
               </div>
-              <Badge variant="outline" className="flex items-center gap-1">
+              <Badge variant="outline" className="flex items-center gap-1 w-fit">
                 <TrendingUp className="w-3 h-3" />
                 {filteredRecommendations.length} coincidencias
               </Badge>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {filteredRecommendations.map((profile) => (
                 <Card key={profile.id} className="hover:shadow-lg transition-all duration-200">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
                           <AvatarImage src={profile.avatar || "/placeholder.svg"} />
                           <AvatarFallback>
                             {profile.name
@@ -385,28 +416,28 @@ export default function MatchingPage() {
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">{profile.name}</CardTitle>
+                            <CardTitle className="text-base sm:text-lg">{profile.name}</CardTitle>
                             {getTypeIcon(profile.type)}
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                             <MapPin className="w-3 h-3" />
-                            {profile.location}
+                            <span className="truncate">{profile.location}</span>
                           </div>
                           {profile.organization && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                               <Building2 className="w-3 h-3" />
-                              {profile.organization}
+                              <span className="truncate">{profile.organization}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={`${getMatchScoreColor(profile.matchScore)} font-bold`}>
+                      <div className="text-center sm:text-right">
+                        <Badge className={`${getMatchScoreColor(profile.matchScore)} font-bold text-xs`}>
                           {profile.matchScore}% Match
                         </Badge>
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1 mt-1 justify-center sm:justify-end">
                           <Star className="w-3 h-3 text-yellow-500 fill-current" />
                           <span className="text-xs text-gray-600">{profile.rating}</span>
                         </div>
@@ -416,13 +447,13 @@ export default function MatchingPage() {
                   <CardContent className="space-y-4">
                     <p className="text-sm text-gray-700">{profile.description}</p>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span>{profile.availability}</span>
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{profile.availability}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-gray-400" />
+                        <Award className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span>{profile.completedProjects} proyectos</span>
                       </div>
                     </div>
@@ -454,10 +485,13 @@ export default function MatchingPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button onClick={() => handleConnect(profile)} className="flex-1">
+                          <Button 
+                            onClick={() => handleConnect(profile)} 
+                            className="flex-1 bg-[#2B4C8C] hover:bg-[#1e3a6f]"
+                          >
                             <Heart className="w-4 h-4 mr-2" />
                             Conectar
                           </Button>
@@ -598,8 +632,13 @@ export default function MatchingPage() {
                           )}
                         </DialogContent>
                       </Dialog>
-                      <Button variant="outline" onClick={() => handleMessage(profile.id)} className="bg-transparent">
-                        <MessageCircle className="w-4 h-4" />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleMessage(profile.id)} 
+                        className="sm:w-auto w-full"
+                      >
+                        <MessageCircle className="w-4 h-4 sm:mr-0" />
+                        <span className="ml-2 sm:hidden">Mensaje</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -617,12 +656,12 @@ export default function MatchingPage() {
           </TabsContent>
 
           <TabsContent value="connections" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Mis Conexiones</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Mis Conexiones</h2>
               <Badge variant="outline">12 conexiones activas</Badge>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 {
                   name: "María González",
@@ -667,19 +706,22 @@ export default function MatchingPage() {
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Centro de Mensajes</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Centro de Mensajes</h2>
               <Badge variant="outline">3 mensajes sin leer</Badge>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Conversaciones</CardTitle>
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="lg:col-span-1 order-1 lg:order-1">
+                <Card className="h-auto lg:h-full">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                      <span>Conversaciones</span>
+                      <Badge variant="secondary" className="text-xs">4</Badge>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="space-y-1">
+                    <div className="max-h-64 lg:max-h-96 overflow-y-auto">
                       {[
                         {
                           name: "María González",
@@ -703,10 +745,14 @@ export default function MatchingPage() {
                       ].map((chat, index) => (
                         <div
                           key={index}
-                          className={`p-3 hover:bg-gray-50 cursor-pointer border-l-2 ${chat.unread ? "border-l-blue-500 bg-blue-50" : "border-l-transparent"}`}
+                          className={`p-3 hover:bg-gray-50 cursor-pointer border-l-2 transition-colors ${
+                            chat.unread 
+                              ? "border-l-blue-500 bg-blue-50 hover:bg-blue-100" 
+                              : "border-l-transparent hover:bg-gray-50"
+                          }`}
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
+                            <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
                               <AvatarFallback className="text-xs">
                                 {chat.name
                                   .split(" ")
@@ -715,10 +761,17 @@ export default function MatchingPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${chat.unread ? "font-semibold" : "font-medium"}`}>{chat.name}</p>
-                              <p className="text-xs text-gray-600 truncate">{chat.lastMessage}</p>
+                              <div className="flex items-center justify-between">
+                                <p className={`text-sm ${chat.unread ? "font-semibold" : "font-medium"} truncate`}>
+                                  {chat.name}
+                                </p>
+                                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{chat.time}</span>
+                              </div>
+                              <p className="text-xs text-gray-600 truncate mt-0.5">{chat.lastMessage}</p>
+                              {chat.unread && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+                              )}
                             </div>
-                            <div className="text-xs text-gray-500">{chat.time}</div>
                           </div>
                         </div>
                       ))}
@@ -727,47 +780,86 @@ export default function MatchingPage() {
                 </Card>
               </div>
 
-              <div className="lg:col-span-2">
-                <Card className="h-96">
-                  <CardHeader className="border-b">
+              <div className="lg:col-span-2 order-2 lg:order-2">
+                <Card className="flex flex-col h-80 sm:h-96 lg:h-full">
+                  <CardHeader className="border-b p-4 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>MG</AvatarFallback>
+                      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                        <AvatarFallback className="text-sm font-medium">MG</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <CardTitle className="text-lg">María González</CardTitle>
-                        <CardDescription>Coordinadora de Proyectos</CardDescription>
+                      <div className="flex-1">
+                        <CardTitle className="text-base sm:text-lg">María González</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardDescription className="text-xs sm:text-sm">Coordinadora de Proyectos</CardDescription>
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-green-600">En línea</span>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-1 p-4">
-                    <div className="space-y-4 h-64 overflow-y-auto">
+                  
+                  <CardContent className="flex-1 p-4 flex flex-col min-h-0">
+                    <div className="flex-1 overflow-y-auto mb-4 space-y-4">
                       <div className="flex justify-start">
-                        <div className="bg-gray-100 rounded-lg p-3 max-w-xs">
-                          <p className="text-sm">
-                            Hola! Vi tu perfil y creo que serías perfecto para nuestro proyecto de educación digital.
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">10:15 AM</p>
+                        <div className="flex flex-col max-w-[75%] sm:max-w-sm">
+                          <div className="bg-gray-100 rounded-2xl rounded-bl-md p-3">
+                            <p className="text-sm text-gray-800">
+                              Hola! Vi tu perfil y creo que serías perfecto para nuestro proyecto de educación digital.
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500 mt-1 ml-3">María • 10:15 AM</span>
                         </div>
                       </div>
+                      
                       <div className="flex justify-end">
-                        <div className="bg-blue-500 text-white rounded-lg p-3 max-w-xs">
-                          <p className="text-sm">¡Hola María! Me interesa mucho. ¿Podrías contarme más detalles?</p>
-                          <p className="text-xs text-blue-100 mt-1">10:20 AM</p>
+                        <div className="flex flex-col max-w-[75%] sm:max-w-sm">
+                          <div className="bg-[#2B4C8C] text-white rounded-2xl rounded-br-md p-3">
+                            <p className="text-sm">
+                              ¡Hola María! Me interesa mucho. ¿Podrías contarme más detalles?
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500 mt-1 mr-3 text-right">Tú • 10:20 AM</span>
                         </div>
                       </div>
+                      
                       <div className="flex justify-start">
-                        <div className="bg-gray-100 rounded-lg p-3 max-w-xs">
-                          <p className="text-sm">
-                            ¿Podemos coordinar una videollamada para el sábado? Te explico todo el proyecto.
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">10:30 AM</p>
+                        <div className="flex flex-col max-w-[75%] sm:max-w-sm">
+                          <div className="bg-gray-100 rounded-2xl rounded-bl-md p-3">
+                            <p className="text-sm text-gray-800">
+                              ¿Podemos coordinar una videollamada para el sábado? Te explico todo el proyecto.
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500 mt-1 ml-3">María • 10:30 AM</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-start">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 ml-3">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{"animationDelay": "0.1s"}}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{"animationDelay": "0.2s"}}></div>
+                          </div>
+                          <span className="ml-2">María está escribiendo...</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4 pt-4 border-t">
-                      <Input placeholder="Escribe tu mensaje..." className="flex-1" />
-                      <Button>Enviar</Button>
+                    
+                    <div className="flex-shrink-0 border-t pt-4">
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <Input 
+                            placeholder="Escribe tu mensaje..." 
+                            className="w-full resize-none border-2 border-gray-200 focus:border-[#2B4C8C] rounded-full px-4 py-2"
+                          />
+                        </div>
+                        <Button className="bg-[#2B4C8C] hover:bg-[#1e3a6f] rounded-full px-4 py-2 flex-shrink-0">
+                          <span className="hidden sm:inline mr-1">Enviar</span>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
