@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   TrendingUp,
   Target,
@@ -33,12 +34,13 @@ import {
   Sun,
   Wind,
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useCallback, useMemo, memo } from "react"
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
 
-  const userStats = {
+  // Memoized user statistics
+  const userStats = useMemo(() => ({
     totalHours: 156,
     projectsCompleted: 8,
     impactScore: 92,
@@ -47,9 +49,10 @@ export default function DashboardPage() {
     carbonFootprintReduced: 2.4,
     peopleImpacted: 123,
     communitiesServed: 5,
-  }
+  }), [])
 
-  const odsProgress = [
+  // Memoized ODS progress data
+  const odsProgress = useMemo(() => [
     {
       ods: "ODS 1 - Fin de la Pobreza",
       progress: 42,
@@ -220,9 +223,10 @@ export default function DashboardPage() {
       icon: Handshake,
       description: "Revitalizar la Alianza Mundial para el Desarrollo Sostenible",
     },
-  ]
+  ], [])
 
-  const recentActivities = [
+  // Memoized recent activities
+  const recentActivities = useMemo(() => [
     {
       id: 1,
       title: "Limpieza de Playa Salinas",
@@ -247,14 +251,83 @@ export default function DashboardPage() {
       status: "En progreso",
       impact: "Plantadas 20 especies nativas",
     },
-  ]
+  ], [])
 
-  const achievements = [
+  // Memoized achievements
+  const achievements = useMemo(() => [
     { title: "Primer Voluntario", description: "Completaste tu primer proyecto", date: "Feb 2024", icon: "🏆" },
     { title: "Eco Warrior", description: "10 horas en proyectos ambientales", date: "Mar 2024", icon: "🌱" },
     { title: "Mentor", description: "Ayudaste a 20+ estudiantes", date: "Mar 2024", icon: "👨‍🏫" },
     { title: "Colaborador", description: "Trabajaste con 5+ organizaciones", date: "Mar 2024", icon: "🤝" },
-  ]
+  ], [])
+
+  // Memoized components for better performance
+  const StatCard = memo(({ title, value, subtitle, icon: Icon, color }: {
+    title: string
+    value: string | number
+    subtitle: string
+    icon: any
+    color: string
+  }) => (
+    <Card className={`border-l-4 border-l-${color}`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className={`h-4 w-4 text-${color}`} />
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-bold text-${color}`}>{value}</div>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </CardContent>
+    </Card>
+  ))
+
+  const ODSCard = memo(({ ods, onIconClick }: { ods: any, onIconClick?: () => void }) => {
+    const IconComponent = ods.icon
+    return (
+      <Card
+        className="border-l-4"
+        style={{ borderLeftColor: ods.color, backgroundColor: ods.bgColor }}
+      >
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 rounded-full shrink-0" style={{ backgroundColor: ods.color + "20" }}>
+              <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: ods.color }} />
+            </div>
+            <div className="flex-1 space-y-2 sm:space-y-3 w-full min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h4 className="font-semibold text-sm sm:text-lg leading-tight" style={{ color: ods.color }}>
+                  {ods.ods}
+                </h4>
+                <Badge variant="outline" style={{ borderColor: ods.color, color: ods.color }} className="text-xs sm:text-sm self-start sm:self-center shrink-0">
+                  {ods.progress}% completado
+                </Badge>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{ods.description}</p>
+              <div className="space-y-2">
+                <Progress
+                  value={ods.progress}
+                  className="h-2 sm:h-3"
+                  style={{
+                    backgroundColor: ods.color + "20",
+                  }}
+                />
+                <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-2 text-xs sm:text-sm">
+                  <span className="flex items-center gap-1">
+                    <Target className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{ods.projects} proyectos activos</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{ods.hours} horas contribuidas</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  })
 
   return (
     <div>
@@ -262,21 +335,23 @@ export default function DashboardPage() {
         title="Dashboard de Impacto"
         description="Monitorea tu progreso y el impacto de tus actividades de voluntariado alineadas con los ODS"
       >
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
-            Exportar
+            <span className="hidden xs:inline">Exportar</span>
+            <span className="xs:hidden">PDF</span>
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Share2 className="w-4 h-4 mr-2" />
-            Compartir
+            <span className="hidden xs:inline">Compartir</span>
+            <span className="xs:hidden">Share</span>
           </Button>
         </div>
       </PageHeader>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Enhanced Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Horas Totales</CardTitle>
@@ -323,7 +398,8 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          {/* Desktop Navigation */}
+          <TabsList className="hidden lg:grid w-full grid-cols-5">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
             <TabsTrigger value="projects">Proyectos</TabsTrigger>
             <TabsTrigger value="ods">Métricas ODS</TabsTrigger>
@@ -331,9 +407,56 @@ export default function DashboardPage() {
             <TabsTrigger value="achievements">Logros</TabsTrigger>
           </TabsList>
 
+          {/* Mobile Navigation */}
+          <div className="lg:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeTab === "overview" && "📊 Resumen"}
+                  {activeTab === "projects" && "🎯 Proyectos"} 
+                  {activeTab === "ods" && "🌍 Métricas ODS"}
+                  {activeTab === "impact" && "📈 Impacto"}
+                  {activeTab === "achievements" && "🏆 Logros"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overview">
+                  <div className="flex items-center gap-2">
+                    <span>📊</span>
+                    <span>Resumen</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="projects">
+                  <div className="flex items-center gap-2">
+                    <span>🎯</span>
+                    <span>Proyectos</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="ods">
+                  <div className="flex items-center gap-2">
+                    <span>🌍</span>
+                    <span>Métricas ODS</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="impact">
+                  <div className="flex items-center gap-2">
+                    <span>📈</span>
+                    <span>Impacto</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="achievements">
+                  <div className="flex items-center gap-2">
+                    <span>🏆</span>
+                    <span>Logros</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* ... existing overview tab ... */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Progreso Mensual</CardTitle>
@@ -408,7 +531,7 @@ export default function DashboardPage() {
 
           {/* ... existing projects tab ... */}
           <TabsContent value="projects" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Proyectos Activos</CardTitle>
@@ -421,7 +544,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Limpieza Costera Salinas</h4>
-                          <p className="text-sm text-gray-600">ODS 14 - Vida Submarina</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 14 - Vida Submarina</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Clock className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">6 horas contribuidas</span>
@@ -436,7 +559,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Tutoría Matemáticas ESPOL</h4>
-                          <p className="text-sm text-gray-600">ODS 4 - Educación de Calidad</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 4 - Educación de Calidad</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Clock className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">12 horas contribuidas</span>
@@ -451,7 +574,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Huerto Comunitario Guayaquil</h4>
-                          <p className="text-sm text-gray-600">ODS 11 - Ciudades Sostenibles</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 11 - Ciudades Sostenibles</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Clock className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">8 horas contribuidas</span>
@@ -476,7 +599,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Campaña Reciclaje ESPOL</h4>
-                          <p className="text-sm text-gray-600">ODS 13 - Acción por el Clima</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 13 - Acción por el Clima</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Calendar className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">Completado en Feb 2024</span>
@@ -491,7 +614,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Donación de Libros</h4>
-                          <p className="text-sm text-gray-600">ODS 4 - Educación de Calidad</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 4 - Educación de Calidad</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Calendar className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">Completado en Ene 2024</span>
@@ -506,7 +629,7 @@ export default function DashboardPage() {
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                         <div>
                           <h4 className="font-medium">Jornada Salud Comunitaria</h4>
-                          <p className="text-sm text-gray-600">ODS 3 - Salud y Bienestar</p>
+                          <p className="text-xs sm:text-sm text-gray-600">ODS 3 - Salud y Bienestar</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Calendar className="w-3 h-3 text-gray-500" />
                             <span className="text-xs text-gray-500">Completado en Dic 2023</span>
@@ -526,26 +649,26 @@ export default function DashboardPage() {
                 <CardDescription>Resumen de tu participación en proyectos</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Target className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                    <div className="text-2xl font-bold text-blue-600">11</div>
-                    <p className="text-sm text-gray-600">Total Proyectos</p>
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <Target className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-blue-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">11</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Total Proyectos</p>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <Award className="w-8 h-8 mx-auto mb-2 text-green-600" />
-                    <div className="text-2xl font-bold text-green-600">8</div>
-                    <p className="text-sm text-gray-600">Completados</p>
+                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                    <Award className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-green-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">8</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Completados</p>
                   </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <Clock className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-                    <div className="text-2xl font-bold text-orange-600">3</div>
-                    <p className="text-sm text-gray-600">En Progreso</p>
+                  <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
+                    <Clock className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-orange-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">3</div>
+                    <p className="text-xs sm:text-sm text-gray-600">En Progreso</p>
                   </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                    <div className="text-2xl font-bold text-purple-600">73%</div>
-                    <p className="text-sm text-gray-600">Tasa de Éxito</p>
+                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
+                    <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-purple-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600">73%</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Tasa de Éxito</p>
                   </div>
                 </div>
               </CardContent>
@@ -553,40 +676,40 @@ export default function DashboardPage() {
           </TabsContent>
 
           {/* ... existing ods tab ... */}
-          <TabsContent value="ods" className="space-y-6">
-            <div className="grid gap-6">
+          <TabsContent value="ods" className="space-y-4 sm:space-y-6">
+            <div className="grid gap-4 sm:gap-6">
               {/* ODS Impact Overview */}
-              <div className="grid md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
                 <Card style={{ backgroundColor: "#FFF1F2", borderColor: "#C5192D" }} className="border-2">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold" style={{ color: "#C5192D" }}>
+                  <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#C5192D" }}>
                       17
                     </div>
-                    <p className="text-sm text-gray-600">ODS Impactados</p>
+                    <p className="text-xs sm:text-sm text-gray-600">ODS Impactados</p>
                   </CardContent>
                 </Card>
                 <Card style={{ backgroundColor: "#F0FDF4", borderColor: "#4C9F38" }} className="border-2">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold" style={{ color: "#4C9F38" }}>
+                  <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#4C9F38" }}>
                       {userStats.peopleImpacted}
                     </div>
-                    <p className="text-sm text-gray-600">Personas Beneficiadas</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Personas Beneficiadas</p>
                   </CardContent>
                 </Card>
                 <Card style={{ backgroundColor: "#F0F9FF", borderColor: "#0A97D9" }} className="border-2">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold" style={{ color: "#0A97D9" }}>
+                  <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#0A97D9" }}>
                       67kg
                     </div>
-                    <p className="text-sm text-gray-600">Residuos Recolectados</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Residuos Recolectados</p>
                   </CardContent>
                 </Card>
                 <Card style={{ backgroundColor: "#FFFBEB", borderColor: "#FD9D24" }} className="border-2">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold" style={{ color: "#FD9D24" }}>
+                  <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: "#FD9D24" }}>
                       {userStats.carbonFootprintReduced}t
                     </div>
-                    <p className="text-sm text-gray-600">CO₂ Reducido</p>
+                    <p className="text-xs sm:text-sm text-gray-600">CO₂ Reducido</p>
                   </CardContent>
                 </Card>
               </div>
@@ -601,55 +724,10 @@ export default function DashboardPage() {
                   <CardDescription>Tu impacto alineado con los ODS de la ONU - Agenda 2030</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-6">
-                    {odsProgress.map((ods, index) => {
-                      const IconComponent = ods.icon
-                      return (
-                        <Card
-                          key={index}
-                          className="border-l-4"
-                          style={{ borderLeftColor: ods.color, backgroundColor: ods.bgColor }}
-                        >
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="p-3 rounded-full" style={{ backgroundColor: ods.color + "20" }}>
-                                <IconComponent className="w-6 h-6" style={{ color: ods.color }} />
-                              </div>
-                              <div className="flex-1 space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-semibold text-lg" style={{ color: ods.color }}>
-                                    {ods.ods}
-                                  </h4>
-                                  <Badge variant="outline" style={{ borderColor: ods.color, color: ods.color }}>
-                                    {ods.progress}% completado
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600">{ods.description}</p>
-                                <div className="space-y-2">
-                                  <Progress
-                                    value={ods.progress}
-                                    className="h-3"
-                                    style={{
-                                      backgroundColor: ods.color + "20",
-                                    }}
-                                  />
-                                  <div className="flex justify-between text-sm">
-                                    <span className="flex items-center gap-1">
-                                      <Target className="w-3 h-3" />
-                                      {ods.projects} proyectos activos
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      {ods.hours} horas contribuidas
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
+                  <div className="grid gap-4 sm:gap-6">
+                    {odsProgress.map((ods, index) => (
+                      <ODSCard key={index} ods={ods} />
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -660,142 +738,142 @@ export default function DashboardPage() {
                   <CardTitle>Métricas de Impacto Detalladas</CardTitle>
                   <CardDescription>Resultados cuantificables de tu contribución a los ODS</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FEF7F0" }}>
-                      <Target className="w-8 h-8 mx-auto mb-2" style={{ color: "#E5243B" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#E5243B" }}>
+                <CardContent className="p-4 sm:p-6">
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FEF7F0" }}>
+                      <Target className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#E5243B" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#E5243B" }}>
                         85
                       </div>
-                      <p className="text-sm text-gray-600">Familias Beneficiadas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Familias Beneficiadas</p>
                       <p className="text-xs text-gray-500">ODS 1</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFFACD" }}>
-                      <Apple className="w-8 h-8 mx-auto mb-2" style={{ color: "#DDA63A" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#DDA63A" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFFACD" }}>
+                      <Apple className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#DDA63A" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#DDA63A" }}>
                         342kg
                       </div>
-                      <p className="text-sm text-gray-600">Alimentos Distribuidos</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Alimentos Distribuidos</p>
                       <p className="text-xs text-gray-500">ODS 2</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
-                      <Heart className="w-8 h-8 mx-auto mb-2" style={{ color: "#4C9F38" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#4C9F38" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
+                      <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#4C9F38" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#4C9F38" }}>
                         156
                       </div>
-                      <p className="text-sm text-gray-600">Personas Atendidas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Personas Atendidas</p>
                       <p className="text-xs text-gray-500">ODS 3</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFF1F2" }}>
-                      <BookOpen className="w-8 h-8 mx-auto mb-2" style={{ color: "#C5192D" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#C5192D" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFF1F2" }}>
+                      <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#C5192D" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#C5192D" }}>
                         234
                       </div>
-                      <p className="text-sm text-gray-600">Estudiantes Tutoreados</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Estudiantes Tutoreados</p>
                       <p className="text-xs text-gray-500">ODS 4</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFF5F5" }}>
-                      <Equal className="w-8 h-8 mx-auto mb-2" style={{ color: "#FF3A21" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#FF3A21" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFF5F5" }}>
+                      <Equal className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#FF3A21" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#FF3A21" }}>
                         67
                       </div>
-                      <p className="text-sm text-gray-600">Mujeres Empoderadas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Mujeres Empoderadas</p>
                       <p className="text-xs text-gray-500">ODS 5</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0FDFF" }}>
-                      <Droplets className="w-8 h-8 mx-auto mb-2" style={{ color: "#26BDE2" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#26BDE2" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0FDFF" }}>
+                      <Droplets className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#26BDE2" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#26BDE2" }}>
                         1,200L
                       </div>
-                      <p className="text-sm text-gray-600">Agua Potable</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Agua Potable</p>
                       <p className="text-xs text-gray-500">ODS 6</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
-                      <Zap className="w-8 h-8 mx-auto mb-2" style={{ color: "#FCC30B" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#FCC30B" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
+                      <Zap className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#FCC30B" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#FCC30B" }}>
                         45kWh
                       </div>
-                      <p className="text-sm text-gray-600">Energía Limpia</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Energía Limpia</p>
                       <p className="text-xs text-gray-500">ODS 7</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FDF2F8" }}>
-                      <TrendingUp className="w-8 h-8 mx-auto mb-2" style={{ color: "#A21942" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#A21942" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FDF2F8" }}>
+                      <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#A21942" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#A21942" }}>
                         89
                       </div>
-                      <p className="text-sm text-gray-600">Empleos Dignos</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Empleos Dignos</p>
                       <p className="text-xs text-gray-500">ODS 8</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFF7ED" }}>
-                      <Factory className="w-8 h-8 mx-auto mb-2" style={{ color: "#FD6925" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#FD6925" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFF7ED" }}>
+                      <Factory className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#FD6925" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#FD6925" }}>
                         12
                       </div>
-                      <p className="text-sm text-gray-600">Proyectos Innovadores</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Proyectos Innovadores</p>
                       <p className="text-xs text-gray-500">ODS 9</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FDF2F8" }}>
-                      <Users className="w-8 h-8 mx-auto mb-2" style={{ color: "#DD1367" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#DD1367" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FDF2F8" }}>
+                      <Users className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#DD1367" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#DD1367" }}>
                         78%
                       </div>
-                      <p className="text-sm text-gray-600">Reducción Desigualdad</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Reducción Desigualdad</p>
                       <p className="text-xs text-gray-500">ODS 10</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
-                      <Building className="w-8 h-8 mx-auto mb-2" style={{ color: "#FD9D24" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#FD9D24" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
+                      <Building className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#FD9D24" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#FD9D24" }}>
                         8
                       </div>
-                      <p className="text-sm text-gray-600">Comunidades Mejoradas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Comunidades Mejoradas</p>
                       <p className="text-xs text-gray-500">ODS 11</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
-                      <Globe className="w-8 h-8 mx-auto mb-2" style={{ color: "#BF8B2E" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#BF8B2E" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#FFFBEB" }}>
+                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#BF8B2E" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#BF8B2E" }}>
                         456kg
                       </div>
-                      <p className="text-sm text-gray-600">Residuos Reciclados</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Residuos Reciclados</p>
                       <p className="text-xs text-gray-500">ODS 12</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
-                      <Leaf className="w-8 h-8 mx-auto mb-2" style={{ color: "#3F7E44" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#3F7E44" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
+                      <Leaf className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#3F7E44" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#3F7E44" }}>
                         2.8t
                       </div>
-                      <p className="text-sm text-gray-600">CO₂ Reducido</p>
+                      <p className="text-xs sm:text-sm text-gray-600">CO₂ Reducido</p>
                       <p className="text-xs text-gray-500">ODS 13</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0F9FF" }}>
-                      <Fish className="w-8 h-8 mx-auto mb-2" style={{ color: "#0A97D9" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#0A97D9" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0F9FF" }}>
+                      <Fish className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#0A97D9" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#0A97D9" }}>
                         3.2km
                       </div>
-                      <p className="text-sm text-gray-600">Costa Limpiada</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Costa Limpiada</p>
                       <p className="text-xs text-gray-500">ODS 14</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
-                      <Trees className="w-8 h-8 mx-auto mb-2" style={{ color: "#56C02B" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#56C02B" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0FDF4" }}>
+                      <Trees className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#56C02B" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#56C02B" }}>
                         289
                       </div>
-                      <p className="text-sm text-gray-600">Árboles Plantados</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Árboles Plantados</p>
                       <p className="text-xs text-gray-500">ODS 15</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F0F9FF" }}>
-                      <Scale className="w-8 h-8 mx-auto mb-2" style={{ color: "#00689D" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#00689D" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F0F9FF" }}>
+                      <Scale className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#00689D" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#00689D" }}>
                         34
                       </div>
-                      <p className="text-sm text-gray-600">Procesos Justos</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Procesos Justos</p>
                       <p className="text-xs text-gray-500">ODS 16</p>
                     </div>
-                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: "#F8FAFC" }}>
-                      <Handshake className="w-8 h-8 mx-auto mb-2" style={{ color: "#19486A" }} />
-                      <div className="text-2xl font-bold" style={{ color: "#19486A" }}>
+                    <div className="text-center p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "#F8FAFC" }}>
+                      <Handshake className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" style={{ color: "#19486A" }} />
+                      <div className="text-lg sm:text-2xl font-bold" style={{ color: "#19486A" }}>
                         23
                       </div>
-                      <p className="text-sm text-gray-600">Alianzas Formadas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Alianzas Formadas</p>
                       <p className="text-xs text-gray-500">ODS 17</p>
                     </div>
                   </div>
@@ -845,7 +923,7 @@ export default function DashboardPage() {
           {/* ... existing impact tab ... */}
           <TabsContent value="impact" className="space-y-6">
             {/* Main Impact Metrics */}
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
               <Card className="border-l-4 border-l-blue-500 bg-blue-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Proyectos Totales</CardTitle>
@@ -891,7 +969,7 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Progreso ODS Destacados */}
               <Card>
                 <CardHeader>
@@ -909,7 +987,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium">Alianzas</p>
-                        <p className="text-sm text-gray-600">12 proyectos</p>
+                        <p className="text-xs sm:text-sm text-gray-600">12 proyectos</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -926,7 +1004,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium">Educación</p>
-                        <p className="text-sm text-gray-600">8 proyectos</p>
+                        <p className="text-xs sm:text-sm text-gray-600">8 proyectos</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -943,7 +1021,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium">Hambre Cero</p>
-                        <p className="text-sm text-gray-600">4 proyectos</p>
+                        <p className="text-xs sm:text-sm text-gray-600">4 proyectos</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -960,7 +1038,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium">Vida Marina</p>
-                        <p className="text-sm text-gray-600">3 proyectos</p>
+                        <p className="text-xs sm:text-sm text-gray-600">3 proyectos</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -977,7 +1055,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium">Sin Pobreza</p>
-                        <p className="text-sm text-gray-600">3 proyectos</p>
+                        <p className="text-xs sm:text-sm text-gray-600">3 proyectos</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -1002,7 +1080,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Proyecto completado</p>
-                      <p className="text-sm text-gray-600">Limpieza de Playas - Salinas</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Limpieza de Playas - Salinas</p>
                       <p className="text-xs text-gray-500">Hace 2 horas</p>
                     </div>
                   </div>
@@ -1011,7 +1089,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Nuevo voluntario</p>
-                      <p className="text-sm text-gray-600">Carlos Mendoza se unió a Educación Digital</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Carlos Mendoza se unió a Educación Digital</p>
                       <p className="text-xs text-gray-500">Hace 5 horas</p>
                     </div>
                   </div>
@@ -1020,7 +1098,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Meta alcanzada</p>
-                      <p className="text-sm text-gray-600">1000 beneficiarios en programas educativos</p>
+                      <p className="text-xs sm:text-sm text-gray-600">1000 beneficiarios en programas educativos</p>
                       <p className="text-xs text-gray-500">Hace 1 día</p>
                     </div>
                   </div>
@@ -1029,7 +1107,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Progreso ODS</p>
-                      <p className="text-sm text-gray-600">ODS 4 alcanzó 90% de cumplimiento</p>
+                      <p className="text-xs sm:text-sm text-gray-600">ODS 4 alcanzó 90% de cumplimiento</p>
                       <p className="text-xs text-gray-500">Hace 1 día</p>
                     </div>
                   </div>
@@ -1044,26 +1122,26 @@ export default function DashboardPage() {
                 <CardDescription>Resultados medibles de las actividades de voluntariado</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Droplets className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                    <div className="text-2xl font-bold text-blue-600">2,500L</div>
-                    <p className="text-sm text-gray-600">Agua limpia distribuida</p>
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <Droplets className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-blue-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">2,500L</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Agua limpia distribuida</p>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <Leaf className="w-8 h-8 mx-auto mb-2 text-green-600" />
-                    <div className="text-2xl font-bold text-green-600">450</div>
-                    <p className="text-sm text-gray-600">Árboles plantados</p>
+                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                    <Leaf className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-green-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">450</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Árboles plantados</p>
                   </div>
-                  <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-red-600" />
-                    <div className="text-2xl font-bold text-red-600">1,200</div>
-                    <p className="text-sm text-gray-600">Estudiantes beneficiados</p>
+                  <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg">
+                    <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-red-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-red-600">1,200</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Estudiantes beneficiados</p>
                   </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <Heart className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-                    <div className="text-2xl font-bold text-orange-600">85kg</div>
-                    <p className="text-sm text-gray-600">Alimentos distribuidos</p>
+                  <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
+                    <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-orange-600" />
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">85kg</div>
+                    <p className="text-xs sm:text-sm text-gray-600">Alimentos distribuidos</p>
                   </div>
                 </div>
               </CardContent>
@@ -1072,7 +1150,7 @@ export default function DashboardPage() {
 
           {/* ... existing achievements tab ... */}
           <TabsContent value="achievements" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {achievements.map((achievement, index) => (
                 <Card key={index} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
@@ -1080,7 +1158,7 @@ export default function DashboardPage() {
                       <div className="text-3xl">{achievement.icon}</div>
                       <div className="flex-1">
                         <h3 className="font-semibold">{achievement.title}</h3>
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{achievement.description}</p>
                         <p className="text-xs text-gray-500 mt-1">Obtenido en {achievement.date}</p>
                       </div>
                       <Badge variant="outline">Desbloqueado</Badge>
@@ -1102,7 +1180,7 @@ export default function DashboardPage() {
                       <div className="text-2xl">🌟</div>
                       <div>
                         <h4 className="font-medium">Super Voluntario</h4>
-                        <p className="text-sm text-gray-600">Completa 200 horas de voluntariado</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Completa 200 horas de voluntariado</p>
                         <Progress value={78} className="w-32 h-2 mt-2" />
                       </div>
                     </div>
@@ -1114,7 +1192,7 @@ export default function DashboardPage() {
                       <div className="text-2xl">🏅</div>
                       <div>
                         <h4 className="font-medium">Líder Comunitario</h4>
-                        <p className="text-sm text-gray-600">Lidera tu primer proyecto</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Lidera tu primer proyecto</p>
                         <Progress value={25} className="w-32 h-2 mt-2" />
                       </div>
                     </div>
@@ -1126,7 +1204,7 @@ export default function DashboardPage() {
                       <div className="text-2xl">🎯</div>
                       <div>
                         <h4 className="font-medium">Especialista ODS</h4>
-                        <p className="text-sm text-gray-600">Contribuye a 5 ODS diferentes</p>
+                        <p className="text-xs sm:text-sm text-gray-600">Contribuye a 5 ODS diferentes</p>
                         <Progress value={60} className="w-32 h-2 mt-2" />
                       </div>
                     </div>
@@ -1142,7 +1220,7 @@ export default function DashboardPage() {
                 <CardDescription>Reconocimientos por tu dedicación al voluntariado</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                   <div className="text-center p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
                     <div className="text-3xl mb-2">🏆</div>
                     <p className="text-sm font-medium">Voluntario Oro</p>
